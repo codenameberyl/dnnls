@@ -107,7 +107,7 @@ It satisfies the assessment goal of **reasoned architectural design and analysis
 ---
 
 ## Author
-Abiola Ouwaseun Onasanya
+Abiola Oluwaseun Onasanya
 <br>
 MSc Artificial Intelligence – Deep Neural Networks & Learning Systems
 <br>

@@ -1,0 +1,18 @@
+latent_dim: 128
+embedding_dim: 128
+sequence_length: 4
+max_text_length: 120
+
+training:
+  batch_size_text: 8
+  batch_size_image: 16
+  batch_size_sequence: 4
+  learning_rate: 0.001
+  epochs_text: 5
+  epochs_image: 5
+  epochs_sequence: 5
+
+loss_weights:
+  lambda_align: 0.5
+  lambda_reid: 0.5
+  lambda_ground: 0.0

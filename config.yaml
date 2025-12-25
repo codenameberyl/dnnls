@@ -1,18 +1,54 @@
-latent_dim: 128
-embedding_dim: 128
-sequence_length: 4
-max_text_length: 120
+# dnnls/config.yaml
 
-training:
-  batch_size_text: 8
-  batch_size_image: 16
-  batch_size_sequence: 4
-  learning_rate: 0.001
+seed: 42
+device: auto   # auto | cuda | cpu
+
+paths:
+  ckpt_dir: models
+  results_dir: results
+
+data:
+  hf_dataset: daniel3303/StoryReasoning
+  split_train: train
+  split_test: test
+  max_text_len: 120
+  K: 4
+
+image:
+  H: 60
+  W: 125
+
+model:
+  latent_dim: 128
+  emb_dim: 128
+  lstm_layers: 1
+  lstm_dropout: 0.1
+
+train:
+  run_text_ae: true
+  run_visual_ae: true
+  run_sequence_predictor: true
+
+  # if checkpoints exist and you don't want retraining
+  skip_if_ckpt_exists: true
+
   epochs_text: 5
   epochs_image: 5
-  epochs_sequence: 5
+  epochs_seq: 5
+
+  batch_text: 8
+  batch_image: 16
+  batch_seq: 4
+
+  lr_text: 0.001
+  lr_image: 0.001
+  lr_seq: 0.001
 
 loss_weights:
   lambda_align: 0.5
   lambda_reid: 0.5
-  lambda_ground: 0.0
+  lambda_ground: 0.0   # kept off by default (toy)
+
+eval:
+  max_gen_len: 60
+  num_val_visualizations: 1

@@ -1,82 +1,68 @@
-# Grounded StoryReasoning: A Toy Multimodal Sequence Predictor
+# DNNLS Assessment — Grounded Toy Model for StoryReasoning
 
-## Overview
-This project implements a **toy grounded multimodal sequence prediction model**
-for the **StoryReasoning dataset**. The goal is to explore **scene understanding,
-entity consistency, and grounded story continuation** using a simplified,
-interpretable architecture suitable for an MSc-level deep learning assessment.
+This repository contains a modular, reproducible implementation of a **toy grounded multimodal sequence predictor** for the **StoryReasoning** dataset.
 
-The work is **inspired by**, but does **not re-implement**, the full
-Qwen Storyteller model described in:
-> Daniel et al., *StoryReasoning: Chain-of-Thought for Scene Understanding and Grounded Story Generation* (2025).
+It demonstrates:
+- Understanding of the dataset fields (frames, GDI story, CoT grounding),
+- A reasonable architecture that incorporates grounding ideas,
+- Qualitative + lightweight quantitative evaluation,
+- A clear discussion of limitations vs the full paper system.
 
 ---
 
-## Dataset Understanding
-Each story consists of:
-- **5+ image frames**
-- A **GDI-formatted story** with descriptions, objects, actions, and locations
-- A **Chain-of-Thought (CoT)** markdown block containing:
-  - Per-frame character/object tables
-  - Explicit bounding boxes
-  - Narrative reasoning
+## Dataset
+HuggingFace: [`daniel3303/StoryReasoning`]("https://huggingface.co/datasets/daniel3303/StoryReasoning")
 
-This project explicitly uses:
-- Frame-level descriptions (GDI)
-- CoT bounding boxes for **toy ROI grounding**
-- Story-level temporal structure
+Each sample includes:
+- 5+ image frames (`images`)
+- frame-level descriptions inside HTML-like GDI tags (`story`)
+- chain-of-thought markdown containing character/object tables + bounding boxes (`chain_of_thought`)
+
+This project uses:
+- GDI descriptions for frame text
+- CoT bounding boxes for **toy ROI grounding** and **re-identification**
 
 ---
 
 ## Model Design (Toy Architecture)
-
-### Phase 1 – Text Autoencoder
-- LSTM encoder–decoder
-- Learns a compact latent representation of frame descriptions
-
-### Phase 2 – Visual Autoencoder
-- CNN encoder–decoder
-- Reconstructs 60×125 RGB frames
-- Produces a 128-D visual latent
-
-### Phase 3 – Sequence Predictor
-- Encodes 4 frames + descriptions
-- Fuses visual + text latents per timestep
-- Temporal GRU models narrative progression
-- Predicts:
-  - Next frame (image)
-  - Next description (text)
-
-### Phase 4 – Grounding & Consistency (Toy)
-- **Image–Text latent alignment loss**
-- **ROI re-identification loss**
-  - Uses CoT bounding boxes
-  - Encourages identity consistency across frames
+Phases:
+1. **Text Autoencoder** (LSTM seq2seq reconstruction)
+2. **Visual Autoencoder** (CNN reconstruction)
+3. **Sequence Predictor** (fuse image + text latents per frame, temporal GRU)
+4. **Toy Grounding** (alignment + ROI re-ID losses)
 
 ---
 
-## Main Innovations (Relative to Baseline)
-- Explicit use of **Chain-of-Thought annotations**
-- ROI-based **entity re-identification signal**
-- Joint visual–text latent alignment
-- Fully interpretable, modular architecture
-
-This design demonstrates **how grounding improves narrative coherence**, even in a simplified model.
+## Main Innovations (relative to baseline)
+1. **Explicit Chain-of-Thought parsing** for grounding signals  
+2. **ROI-based entity re-identification loss** from CoT character IDs  
+3. **Latent alignment loss** between image and text embeddings  
+4. A clean 4-stage experimental pipeline (Text AE → Image AE → Frozen fusion → Grounded training)
 
 ---
 
 ## Results (Qualitative)
-- Visual autoencoder reconstructs scene layout and color distribution
-- Sequence predictor produces **structurally plausible next frames**
-- Text generation reflects scene continuity but remains abstract
-- ROI loss stabilises identity representations across frames
+After training:
+- Visual AE reconstructs frames with correct global layout (blurred but coherent).
+- Sequence predictor produces structurally plausible next images.
+- Text generation follows dataset style but remains abstract (expected in a small LSTM).
+- ROI re-ID loss stabilizes embeddings for the same character across frames when CoT IDs exist.
 
-> This is expected: the model is intentionally small and trained without
-large-scale pretraining.
+Outputs saved under:
+- `results/figures/` (loss curves)
+- `results/tables/` (training summary CSV)
 
 ---
 
-## Limitations vs the Paper
+## Limitations vs Paper
+
+The paper’s Qwen Storyteller uses a large pretrained VLM with full detection + tracking.
+This repo implements a small educational system:
+
+* CNN autoencoder (not ViT)
+* LSTM/GRU (not multimodal transformers)
+* Toy ROI grounding (not full detection/tracking)
+
 | This Project | Qwen Storyteller |
 |-------------|----------------|
 CNN autoencoder | Vision Transformer
@@ -85,7 +71,7 @@ Toy ROI loss | Full object detection + Re-ID
 No VLM | Qwen2.5-VL 7B
 Small-scale training | Large-scale fine-tuning
 
-This project is **conceptual and educational**, not state-of-the-art.
+This is intentional for feasibility on free Colab and for interpretability.
 
 ---
 
@@ -99,10 +85,32 @@ It satisfies the assessment goal of **reasoned architectural design and analysis
 
 ---
 
+## Files
+
+* `src/model.py` : model classes (Text AE, Visual AE, SequencePredictor)
+* `src/utils.py` : parsing + datasets + checkpointing + metrics
+* `src/train.py` : config-driven training pipeline
+* `config.yaml` : all experimental settings
+* `results/` : curves + tables
+* `models/` : saved checkpoints
+
+All hyperparameters are controlled by `config.yaml`.
+
+Checkpoints are saved to `models/`:
+
+* `text_autoencoder.pth`
+* `visual_autoencoder.pth`
+* `sequence_predictor_grounded.pth`
+
+---
+
 ## How to Run
-1. Open `final_notebook.ipynb`
-2. Ensure checkpoints exist in `models/`
-3. Run cells sequentially for evaluation and visualization
+From inside `dnnls/`:
+
+```bash
+pip install -r requirements.txt
+python -m src.train
+```
 
 ---
 

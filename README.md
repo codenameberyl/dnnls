@@ -112,7 +112,7 @@ From inside `dnnls/`:
    pip install -r requirements.txt
    ```
 2. Open and run:
-   - `final_notebook.ipynb`
+   * `final_notebook.ipynb`
 
 ---
 

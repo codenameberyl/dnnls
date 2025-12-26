@@ -107,10 +107,12 @@ Checkpoints are saved to `models/`:
 ## How to Run
 From inside `dnnls/`:
 
-```bash
-pip install -r requirements.txt
-python -m src.train
-```
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Open and run:
+   - `final_notebook.ipynb`
 
 ---
 

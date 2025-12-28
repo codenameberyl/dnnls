@@ -1,54 +1,56 @@
-# dnnls/config.yaml
-
 seed: 42
-device: auto   # auto | cuda | cpu
+
+# If true, training phases skip if checkpoint exists in paths.ckpt_dir
+skip_if_ckpt_exists: true
+
+# Freeze pretrained text/image AEs before sequence training (good for Colab)
+freeze_pretrained: true
+
+# HF dataset (config-driven)
+hf_dataset: daniel3303/StoryReasoning
+hf_split_train: train
+
+tokenizer_name: google-bert/bert-base-uncased
 
 paths:
-  ckpt_dir: models
+  # Colab + Drive:
+  ckpt_dir: /content/gdrive/MyDrive/DL_Checkpoints
   results_dir: results
 
-data:
-  hf_dataset: daniel3303/StoryReasoning
-  split_train: train
-  split_test: test
-  max_text_len: 120
-  K: 4
-
-image:
-  H: 60
-  W: 125
-
-model:
-  latent_dim: 128
+phase1_text_ae:
+  enabled: true
+  ckpt_name: text_autoencoder.pth
   emb_dim: 128
-  lstm_layers: 1
-  lstm_dropout: 0.1
+  latent_dim: 128
+  num_layers: 1
+  dropout: 0.1
+  max_len: 120
+  batch_size: 8
+  lr: 0.001
+  epochs: 5
 
-train:
-  run_text_ae: true
-  run_visual_ae: true
-  run_sequence_predictor: true
+phase2_visual_ae:
+  enabled: true
+  ckpt_name: visual_autoencoder.pth
+  latent_dim: 128
+  image_hw: [60, 125]
+  batch_size: 16
+  lr: 0.001
+  epochs: 5
 
-  # if checkpoints exist and you don't want retraining
-  skip_if_ckpt_exists: true
+phase3_sequence:
+  enabled: true
+  ckpt_name: sequence_predictor_grounded.pth
+  latent_dim: 128
+  image_hw: [60, 125]
+  max_len: 120
+  K: 4
+  train_split: 0.8
+  batch_size: 4
+  lr: 0.001
+  epochs: 5
 
-  epochs_text: 5
-  epochs_image: 5
-  epochs_seq: 5
-
-  batch_text: 8
-  batch_image: 16
-  batch_seq: 4
-
-  lr_text: 0.001
-  lr_image: 0.001
-  lr_seq: 0.001
-
-loss_weights:
-  lambda_align: 0.5
-  lambda_reid: 0.5
-  lambda_ground: 0.0   # kept off by default (toy)
-
-eval:
-  max_gen_len: 60
-  num_val_visualizations: 1
+  # toy grounding loss weights
+  lambda_align: 1.0
+  lambda_reid: 1.0
+  lambda_ground: 0.25

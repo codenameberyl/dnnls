@@ -1,12 +1,12 @@
-# DNNLS Assessment — Grounded Toy Model for StoryReasoning
+# StoryReasoning — Grounded Toy Storyteller
 
-This repository contains a modular, reproducible implementation of a **toy grounded multimodal sequence predictor** for the **StoryReasoning** dataset.
+This repository is a modular, lightweight **toy implementation** inspired by the *StoryReasoning* paper.  
+It is **not** a re-implementation of Qwen Storyteller; instead, it demonstrates (at small scale):
 
-It demonstrates:
-- Understanding of the dataset fields (frames, GDI story, CoT grounding),
-- A reasonable architecture that incorporates grounding ideas,
-- Qualitative + lightweight quantitative evaluation,
-- A clear discussion of limitations vs the full paper system.
+- Understanding the dataset fields (frames, GDI story tags, chain-of-thought grounding tables)
+- A reasonable grounded architecture using these signals
+- Qualitative evaluation + simple “toy” quantitative signals
+- Discussion gaps vs the full paper system
 
 ---
 
@@ -18,39 +18,41 @@ Each sample includes:
 - frame-level descriptions inside HTML-like GDI tags (`story`)
 - chain-of-thought markdown containing character/object tables + bounding boxes (`chain_of_thought`)
 
-This project uses:
-- GDI descriptions for frame text
-- CoT bounding boxes for **toy ROI grounding** and **re-identification**
+---
+
+## Key Idea (Toy Implementation)
+
+The baseline notebook architecture uses only global frame embeddings and global text embeddings, which can cause referential drift (e.g., wrong entity continuity).
+
+This repo adds **toy grounding signals** using the dataset’s `chain_of_thought` markdown tables:
+
+1. **CoT grounding parser**
+   - Extracts per-frame **entity IDs** and **bounding boxes** from the chain-of-thought tables.
+
+2. **Toy cross-frame object re-identification loss**
+   - If an entity ID appears in ≥2 frames, we crop two ROIs using the bounding boxes,
+     encode both with the visual encoder, and enforce similarity (MSE).
+   - This is a lightweight proxy for the paper’s re-ID concept.
+
+3. **Latent alignment loss (image ↔ text)**
+   - Encourages the **mean visual latent** of a sequence to align with the **mean text latent**
+     from the corresponding descriptions.
+
+4. **Sequence predictor**
+   - Encodes 4 frames + 4 descriptions
+   - Fuses per-step latents and runs a GRU
+   - Decodes:
+     - the **next frame** (image reconstruction)
+     - the **next description** (teacher-forced text decoding)
 
 ---
 
-## Model Design (Toy Architecture)
-Phases:
-1. **Text Autoencoder** (LSTM seq2seq reconstruction)
-2. **Visual Autoencoder** (CNN reconstruction)
-3. **Sequence Predictor** (fuse image + text latents per frame, temporal GRU)
-4. **Toy Grounding** (alignment + ROI re-ID losses)
-
----
-
-## Main Innovations (relative to baseline)
-1. **Explicit Chain-of-Thought parsing** for grounding signals  
-2. **ROI-based entity re-identification loss** from CoT character IDs  
-3. **Latent alignment loss** between image and text embeddings  
-4. A clean 4-stage experimental pipeline (Text AE → Image AE → Frozen fusion → Grounded training)
-
----
-
-## Results (Qualitative)
+## Results
 After training:
 - Visual AE reconstructs frames with correct global layout (blurred but coherent).
-- Sequence predictor produces structurally plausible next images.
 - Text generation follows dataset style but remains abstract (expected in a small LSTM).
+- Sequence predictor produces structurally plausible next images.
 - ROI re-ID loss stabilizes embeddings for the same character across frames when CoT IDs exist.
-
-Outputs saved under:
-- `results/figures/` (loss curves)
-- `results/tables/` (training summary CSV)
 
 ---
 
@@ -85,13 +87,13 @@ It satisfies the assessment goal of **reasoned architectural design and analysis
 
 ---
 
-## Files
+## Project Structure
 
 * `src/model.py` : model classes (Text AE, Visual AE, SequencePredictor)
-* `src/utils.py` : parsing + datasets + checkpointing + metrics
-* `src/train.py` : config-driven training pipeline
+* `src/train.py` : config-driven training pipeline with validation plots
+* `src/utils.py` : parsing (GDI, CoT), ROI sampling, checkpoints, plotting
 * `config.yaml` : all experimental settings
-* `results/` : curves + tables
+* `results/` : training_curves, validation_samples
 * `models/` : saved checkpoints
 
 All hyperparameters are controlled by `config.yaml`.
@@ -105,14 +107,20 @@ Checkpoints are saved to `models/`:
 ---
 
 ## How to Run
-From inside `dnnls/`:
 
 1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. Open and run:
-   * `final_notebook.ipynb`
+2. In Google Colab:
+   * Mount Drive
+   * Ensure `config.yaml` points `paths.ckpt_dir` to your Drive checkpoint folder.
+3. Run:
+   * `final_notebook.ipynb` (Run All)
+   * It calls `src.train.run("config.yaml")`, which:
+      * trains phases enabled in config (or skips if checkpoints exist)
+      * saves checkpoints into `paths.ckpt_dir`
+      * saves figures into `paths.results_dir`
 
 ---
 

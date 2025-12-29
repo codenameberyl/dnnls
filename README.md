@@ -12,7 +12,7 @@ It is **not** a re-implementation of Qwen Storyteller; instead, it demonstrates 
 
 ## Dataset
 
-HuggingFace: `daniel3303/StoryReasoning`
+HuggingFace: [`daniel3303/StoryReasoning`]("https://huggingface.co/datasets/daniel3303/StoryReasoning")
 
 Each sample includes:
 - 5+ image frames (`images`)

@@ -14,8 +14,8 @@ tokenizer_name: google-bert/bert-base-uncased
 
 paths:
   # Colab + Drive:
-  ckpt_dir: /content/gdrive/MyDrive/DL_Checkpoints
-  results_dir: results
+  ckpt_dir: /content/gdrive/MyDrive/dnnls/models
+  results_dir: /content/gdrive/MyDrive/dnnls/results
 
 phase1_text_ae:
   enabled: true

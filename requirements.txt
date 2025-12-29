@@ -1,0 +1,8 @@
+torch
+torchvision
+transformers
+datasets
+numpy
+matplotlib
+beautifulsoup4
+pyyaml
